@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-type api struct{
-	router http.Handler
+type api struct {
+	router     http.Handler
 	repository pet.PetRepository
 }
 
@@ -16,8 +16,8 @@ type Server interface {
 	Router() http.Handler
 }
 
-func New() Server  {
-	a := &api{}
+func New(repo pet.PetRepository) Server {
+	a := &api{repository: repo}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/pets", a.fetchPets).Methods(http.MethodGet)
@@ -30,20 +30,20 @@ func (a *api) Router() http.Handler {
 	return a.router
 }
 
-func (a *api) fetchPets(writer http.ResponseWriter, request *http.Request) {
+func (a *api) fetchPets(writer http.ResponseWriter, _ *http.Request) {
 	pets, _ := a.repository.FetchPets()
 	writer.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(writer).Encode(pets)
+	_ = json.NewEncoder(writer).Encode(pets)
 }
 
 func (a *api) fetchPet(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	pet, err := a.repository.FetchPetByID(vars["ID"])
+	animal, err := a.repository.FetchPetByID(vars["ID"])
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		writer.WriteHeader(http.StatusNotFound) //Not found for sample simplicity
-		json.NewEncoder(writer).Encode("Pet not found")
+		_ = json.NewEncoder(writer).Encode("Pet not found")
 		return
 	}
-	json.NewEncoder(writer).Encode(pet)
+	_ = json.NewEncoder(writer).Encode(animal)
 }
